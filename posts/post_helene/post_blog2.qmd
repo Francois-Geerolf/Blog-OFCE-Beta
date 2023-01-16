@@ -1,0 +1,326 @@
+---
+title: "Inégalités des chances au concours externe de l'ENA"
+subtitle: "Le rôle du genre croisé à l'origine sociale"
+author:
+   - Maxime Parodi,
+   - Hélène Périvier,
+   - Fabrice Larat
+lang: fr
+crossref:
+  fig-title: Graphique
+  fig-labels: arabic
+  fig-prefix: graphique
+  tbl-title: Tableau
+  tbl-labels: arabic
+  tbl-prefix: tableau
+fig-cap-location: top
+tbl-cap-location: top
+number-sections: true
+number-depth: 3
+comments: 
+  hypothesis: true
+format:
+   html:
+     toc: true
+     toc-depth: 3
+     toc-location: left
+     reference-location: margin
+     embed-resources: true
+   pdf: 
+    documentclass: scrartcl
+    classoption: 
+    - DIV=12
+
+editor: visual
+bibliography: references.bib
+---
+
+```{r library, include=FALSE}
+library(janitor)
+library(patchwork)
+library(cowplot)
+library(vcdExtra)
+library(glue)
+library(ggtext)
+library(stargazer)
+library(GGally)
+library(effects)
+library(plotly)
+library(ggeffects)
+library(gtsummary)
+library(gt)
+library(tidyverse)
+
+getwd()
+source("~/Egale/ENA-Sciences-Po/seuils.r")
+source("~/Egale/ENA-Sciences-Po/my_theme.r")
+
+EGALE <- "~/files/DataR"
+
+ScPo_mod <- readRDS("{EGALE}/ScPo_modele.rda" |> glue())
+
+ScPo_mod <- ScPo_mod |> 
+  mutate(eap = if_else(str_detect(ecole_m1, "affaires publiques"), "EAP", "Autres"),
+         chemin = if_else(eap == "EAP" & fipu_m1, "Voie principale", "Autre voie", 
+                          missing = "Autre voie") |> 
+           factor(levels = c("Voie principale", "Autre voie")),
+         annee_ds_dipl2 = as.integer(annee_ds_dipl),
+         inscrit_ena2 = as.integer(inscrit_ena == "Oui"),
+         sexe = fct_recode(sexe, "Femmes" = "F", "Hommes" = "M"), 
+         sexe = fct_relevel(sexe, "Femmes"),
+         quant_droits_payes = fct_recode(quant_droits_payes,
+                                         "Nuls" = "droits payés nuls",
+                                         "Médians inf." = "droits médians inférieurs",
+                                         "Médians sup."= "droits médians supérieurs",
+                                         "Elevés" = "droits élevés"))
+ENA1 <- readRDS("{EGALE}/ENA_candidature.rda" |> glue())
+ENA <- ENA1 |> 
+  filter(concours == "Externe") |> 
+  mutate(sexe= fct_recode(sexe, "Femmes" = "Féminin", "Hommes" = "Masculin"),
+         sexe = fct_relevel(sexe, "Femmes"))
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message=FALSE,
+                      warning = FALSE,
+                      fig.pos="H", 
+                      cache = TRUE)
+```
+
+Au regard des derniers résultats du concours de l'INSP (anciennement ENA), Sciences Po Paris reste le principal pourvoyeur de futurs énarques : parmi les lauréats du concours externe 2022, 80% sont issus de Sciences Po Paris. Cependant, alors que l'on compte 60% d'étudiantes en master à Sciences Po, elles représentent moins de 45% des élèves de l'année préparatoire aux concours administratifs de Sciences Po (PCA) et à peine 40% des admis au concours externe de l'ENA. Afin de mieux comprendre les processus à l'œuvre, une collaboration entre l'OFCE Sciences Po et l'INSP a permis de mettre en commun des données jusque-là inexploitées en suivant le parcours de 5 cohortes d'élèves inscrits dans la PCA entre 2016 à 2020, depuis leur entrée à Sciences Po jusqu'à leur sortie de l'ENA pour les lauréats. L'analyse de ces données a permis d'identifier un effet croisé du genre et de l'origine sociale jamais quantifié à ce jour (pour plus de détails voir @parodi2022 ).
+
+Les résultats montrent que les femmes d'origine modeste ont nettement moins de chance que les autres de se projeter en amont de leurs études dans ce concours, de s'y préparer, de s'y inscrire et, même d'y réussir. Deux explications ressortent de l'analyse statistique : un effet de "déperdition" tout au long du processus et un effet "performance" au moment du concours tous deux défavorables aux femmes d'origine sociale populaire. Ainsi, nous montrons que s'il y a bien une lente féminisation de l'ENA, celle-ci s'effectue principalement par le haut de la pyramide sociale, inversement le processus de diversification sociale passe principalement par les hommes.[^1]
+
+[^1]: L'origine sociale est mesurée à partir du montant moyen par trimestre de droits de scolarité payés par l'élève durant sa scolarité à Sciences Po. Ces derniers dépendent des revenus du ménage d'origine, ce qui donne une information sur l'origine sociale de l'élève. Nous distingons ainsi quatre catégories : les personnes n'ayant jamais payé de droits de scolarité à Sciences Po représentent environ un quart de la population et le reste de la population partagé en trois catégories de même effectif. Nous considérons que ceux ayant réglé des montants élevés (dernier quartile) appartiennent à la catégorie d'origine sociale aisée tandis que ceux n'ayant pas réglé de droits de scolarité sont d'origine sociale modeste.
+
+### L'effet de déperdition : moins de femmes à chaque étape du processus de sélection {.unnumbered}
+
+L'entrée à l'ENA est l'aboutissement d'un long parcours qui commence dès le choix de spécialités en master (la voie classique, que nous qualifions de "principale" étant la spécialité "Administration publique" de l'école d'Affaires publiques de Sciences Po), suivi de l'inscription au concours de l'ENA, puis du passage des épreuves écrites d'admissibilité, suivi de la réussite aux épreuves orales d'admission. A chacune de ces étapes, la part des femmes se réduit significativement. Le graphique 1 synthétise ce processus d'élimination progressive, qui illustre ce phénomène de "déperdition" : les femmes sont moins nombreuses que les hommes à opter pour la voie principale conduisant à la préparation de l'ENA dès le master 1, elles sont moins nombreuses à s'inscrire au concours de l'ENA. Ceci reflète le caractère genrée de l'orientation scolaire : le concours de l'ENA demeurant masculin, les femmes se portent vers d'autres concours administratifs. En outre elles sont moins enclines à s'y représenter en cas d'échec. Cet effet genré des choix de concours est singulièrement plus marqué pour les femmes d'origine sociale modeste.
+
+```{r, include =FALSE}
+
+tab_Femmes <- ScPo_mod |> filter(!is.na(quant_droits_payes), sexe == "Femmes") |>
+  group_by(quant_droits_payes) |>
+  summarise(pca = n(),
+            voie_principale = sum(chemin == "Voie principale", na.rm = TRUE),
+            annee_6 = sum(annee_ds_dipl2 == 6, na.rm = TRUE),
+            inscrit = sum(inscrit_ena2, na.rm = TRUE),
+            admissible = sum(admissible == "oui", na.rm = TRUE),
+            admis = sum(admis == "oui", na.rm = TRUE))
+tab_long_Femmes <- tab_Femmes |>
+  pivot_longer(!quant_droits_payes,names_to = "catF", values_to = "countF")
+
+tab_long_Femmes <- tab_long_Femmes |>
+  mutate(catF = factor(catF, levels = c("voie_principale","pca","annee_6","inscrit", "admissible","admis")),
+         catF = fct_recode(catF,"Voie principale" = "voie_principale",
+                           "Inscrit en PCA" = "pca",
+                           "Inscrit en 6e année" = "annee_6",
+                           "Inscrit ENA" = "inscrit",
+                           "Admissible" = "admissible",
+                           "Admis" = "admis"))
+
+
+tab_Hommes <- ScPo_mod |> filter(!is.na(quant_droits_payes), sexe == "Hommes") |>
+  group_by(quant_droits_payes) |>
+  summarise(pca = n(),
+            voie_principale = sum(chemin == "Voie principale", na.rm = TRUE),
+            annee_6 = sum(annee_ds_dipl2 == 6, na.rm = TRUE),
+            inscrit = sum(inscrit_ena2, na.rm = TRUE),
+            admissible = sum(admissible == "oui", na.rm = TRUE),
+            admis = sum(admis == "oui", na.rm = TRUE))
+tab_long_Hommes <- tab_Hommes |>
+  pivot_longer(!quant_droits_payes,names_to = "catH", values_to = "countH")
+
+tab_long_Hommes <- tab_long_Hommes |>
+  mutate(catH = factor(catH, levels = c("voie_principale","pca","annee_6","inscrit", "admissible","admis")),
+         catH = fct_recode(catH,"Voie principale" = "voie_principale",
+                           "Inscrit en PCA" = "pca",
+                           "Inscrit en 6e année" = "annee_6",
+                           "Inscrit au concours ENA" = "inscrit",
+                           "Admissible" = "admissible",
+                           "Admis" = "admis"))
+
+```
+
+Graphique 1:
+
+Effectifs aux différentes étapes du processus d'accès à l'ENA
+
+```{r, echo= FALSE, out.width="90%"}
+
+graph_Femmes <- tab_long_Femmes |>
+  filter(catF != "Inscrit en PCA" & catF != "Inscrit en 6e année") |>
+  ggplot(aes(x = quant_droits_payes , y = countF, fill = catF)) +
+  geom_bar(position="dodge", stat="identity") +
+  ylim(c(0, 280)) +
+  theme(legend.position="none") +
+  scale_fill_brewer(palette = "PiYG") +
+  labs(title = "Femmes", x = "Droits de scolarité", y = "Nombre de préparationnaires ou candidats", fill = "") +
+  My_Theme +
+  theme(legend.position = "bottom")
+
+graph_Hommes <- tab_long_Hommes |>
+  filter(catH != "Inscrit en PCA" & catH != "Inscrit en 6e année") |>
+  ggplot(aes(x = quant_droits_payes , y = countH, fill = catH)) +
+  geom_bar(position="dodge", stat="identity", show.legend = FALSE) +
+  theme(legend.position="none") +
+  ylim(c(0, 280)) +
+  scale_fill_brewer(palette = "PiYG") +
+  labs(title = "Hommes",y = " ", x = "Droits de scolarité", fill = "") +
+  My_Theme
+
+
+legend3 <- get_legend(graph_Femmes)
+
+graph_Femmes + graph_Hommes &
+  plot_annotation(subtitle = "Selon le sexe et l'origine sociale",
+                  caption = " ")&
+  theme(plot.caption = element_text(size = 6, family="serif"), 
+        plot.title = element_text(size = 10, family="serif"),
+        plot.subtitle = element_text(size= 8, family="serif")) 
+```
+
+Source: EGALE, cohortes 2016-2020
+
+Lecture du graphique 1 : Les niveaux de droits de scolarité correspondent au montant de droits moyens par trimestre acquittés durant la scolarité à Sciences Po.
+
+```{r,eval= FALSE}
+#| echo: false
+library(downloadthis)
+tab_long_Femmes |>
+  download_this(
+    output_name = "data",
+    output_extension = ".csv",
+    button_label = "données du graphique en csv",
+    button_type = "default",
+    self_contained = TRUE,
+    has_icon = TRUE,
+    icon = "fa fa-file-csv"
+  )
+```
+
+### Les femmes issues de milieux populaires se préparent moins spécifiquement au concours de l'ENA {.unnumbered}
+
+Les préparationnaires qui s'inscrivent au concours de l'ENA s'y préparent en passant des galops et des examens blancs dans les matières correspondant au concours. A partir des informations relatives aux nombres de galops passés par matière et aux notes obtenues, nous construisons des variables qui mesurent le niveau général de l'individu et son degré de préparation, relativement aux autres préparationnaires et à l'ensemble des candidats. Le graphique 2 montre la distribution par quartile sous forme de boîtes à moustache du *niveau relatif général* selon le sexe et l'origine sociale pour la population d'élèves de la PCA qui se sont inscrits au concours de l'ENA. Les femmes d'origine sociale modeste atteignent un *niveau relatif général* au terme de l'année de prépa plus faible que les autres catégories : plus de la moitié d'entre elles atteignent un niveau insuffisant pour être admissible alors que, pour les trois autres catégories, plus de la moitié obtiennent un niveau *a priori* supérieur à la barre la d'admissibilité. Cet écart reflète des stratégies de concours différentes. En effet, alors que les hommes ont tendance à se focaliser sur le seul concours de l'ENA, les femmes, en particulier celles issues de milieux sociaux modestes, vont y ajouter (et donc préparer) d'autres concours, jugés plus immédiatement accessibles ou plus conformes à leurs attentes. Pour cette raison, leur niveau de préparation au concours de l'ENA, avec ses spécificités, est relativement moindre au regard de celui atteint par les autres candidats.
+
+Graphique 2:
+
+Distribution du niveau général relatif en PCA des personnes inscrites au concours de l'ENA
+
+```{r, echo= FALSE, fig.height =5, out.width="100%"}
+
+ScPo_inscrit <- ScPo_mod |> 
+  filter(inscrit_ena2 == 1)
+
+ScPo_inscrit <- ScPo_inscrit |> 
+  mutate(clsex = case_when(
+    sexe=="Femmes" & quant_droits_payes=="Nuls"~"Femmes, droits scol. nuls", 
+    sexe=="Hommes"& quant_droits_payes=="Nuls"~"Hommes, droits scol. nuls", 
+    sexe=="Femmes"&quant_droits_payes!="Nuls"~"Femmes, autre",
+    sexe=="Hommes"& quant_droits_payes!="Nuls"~"Hommes, autre",
+    TRUE~NA_character_)) 
+
+ScPo_inscrit1 <- ScPo_inscrit |> 
+  filter(!is.na(niveau_ecrit)) |>
+  mutate(clsex = factor(clsex, c("Femmes, droits scol. nuls","Femmes, autre", "Hommes, droits scol. nuls", "Hommes, autre")))
+graph <- ggplot(ScPo_inscrit1)+
+  geom_boxplot(aes(x =clsex ,
+                    y = niveau_ecrit,
+                    widths= 0.1,
+                    color=clsex,
+                    outlier.color = NULL,
+                    outlier.fill= NULL)) +
+  #coord_flip()+
+  scale_color_manual("",values=c("Femmes, droits scol. nuls"="#FFCC00",
+                                 "Femmes, autre"= "#FF9800FF",
+                                 "Hommes, droits scol. nuls"= "#8FD175",
+                                 "Hommes, autre"= "#4CAF50FF"))+
+  geom_hline(yintercept = seuil_admissibilite20, linetype = "longdash",size=0.2) +
+  annotate("text", y = 11, x =2.5,
+           color="black",size=2.5, label = "Seuil d'admissibilité")+
+  labs(subtitle = "selon le sexe et l'origine sociale",
+       caption = "Source: EGALE, cohortes 2016-2020; Droits.scol nuls -> aucun droits de scolarité acquittés durant la scolarité à Sc.Po",
+       x=" ",
+       y="note sur 20 ")+
+ My_Theme +
+ theme( plot.caption = element_text(size = 10),
+        plot.title = element_text(size = 14),
+        plot.subtitle = element_text(size= 14),
+        axis.text.y = element_text(size = 11),
+        axis.text.x = element_text(size = 11),
+        axis.title.x = element_text(size = 11))
+
+ggplotly(graph) |> 
+  layout(
+    showlegend=FALSE, 
+    shape = list(fillcolor = FALSE),
+    maker = list(opacity = 0))
+```
+
+Source: EGALE, cohortes 2016-2020
+
+Lecture du graphique 2 : chaque boîte représente la distribution par quartile du niveau atteint en prépa mesuré par une note sur 20 pour chaque catégorie sociale. S'agissant des femmes issues de milieux modestes, la note médiane est 10.45/20, la borne supérieure du 1er quartile est 9.71/10, la borne supérieure du dernier quartile est 13.54/20. Les points représentent les valeurs extrêmes.
+
+### Effet de performance : les femmes issues de milieux populaires ne révèlent pas leur niveau durant les épreuves écrites {.unnumbered}
+
+L'analyse statistique des résultats obtenus aux épreuves écrites permet de tenir compte du *niveau relatif général*, du *degré d'entraînement général* et du nombre de candidatures passées, du sexe et de l'origine sociale. Une fois le modèle estimé, il est possible de prédire la note qu'obtiendrait un individu en fonction de certaines caractéristiques observables telles que son origine sociale, son degré de préparation, le rang de sa candidature ou encore son sexe. Le graphique 3 donne la note totale obtenue aux épreuves écrites que prédit le modèle pour des individus qui candidatent pour la première fois, dont le niveau relatif général et le degré d'entraînement est excellent (au niveau du 9^ème^ décile sur l'ensemble des préparationnaires inscrits au concours de l'ENA). Les chances d'admissibilité des hommes, c'est-à-dire les chances de passer le barrage des épreuves écrites, sont très proches quelle que soit leur origine sociale. En revanche, les chances d'admissibilité des femmes varient nettement selon l'origine sociale : les femmes d'origine sociale modeste obtiennent des notes plus faibles que les autres femmes ou que leurs homologues hommes et ceci pour un niveau, un degré de préparation et un rang de candidature similaire. Ainsi des élèves qui se sont entraînés avec la même intensité et qui ont atteint le même niveau au cours des examens blancs durant l'année préparatoire précédant le concours n'ont pas les mêmes chances de réussite aux épreuves écrites anonymes : les femmes d'origine sociale modeste "sous-performent" au moment crucial de l'examen. Les résultats aux épreuves écrites des femmes issues de milieux populaires ne sont pas à la hauteur de leur véritable niveau.
+
+```{r regression2, include = FALSE}
+mod_ecrit_total1  <-  lm(ecrit_total20 ~ sexe * class_soc , data = ScPo_mod) 
+
+mod_ecrit_total2  <-  lm(ecrit_total20 ~ sexe * class_soc + niveau_ecrit + entrainement, data = ScPo_mod)
+
+
+mod_ecrit_total3  <-  lm(ecrit_total20 ~ sexe * class_soc + niveau_ecrit + entrainement + nieme_candidature, data = ScPo_mod)
+
+```
+
+Graphique 3 :
+
+Note totale prédite aux épreuves écrites selon le sexe et l'origine sociale
+
+```{r,echo= FALSE, out.width="90%"}
+
+ggpredict(mod_ecrit_total3, terms = c("sexe","class_soc", "niveau_ecrit [13.4]", "entrainement [2.8]")) |> 
+  plot() +
+  labs(title = " ",
+       x= " ",
+       y = "Note sur 20") + 
+  scale_colour_discrete(name="Droits de scolarité",
+                        breaks=c("1", "2", "3", "4"),
+                        labels=c("Nuls", "Médians inf.", "Médians sup.", "Elevés"))+
+  plot_annotation(title = "",
+                  subtitle = "Pour une 1ère candidature, un niveau à l'écrit et l'entraînement du 9ème décile",
+                  caption = " ") +
+  geom_hline(yintercept = c(seuil_admissibilite20), 
+             linetype = c("longdash")) +
+  annotate(c("text"), x = 1.5, y = 10.85,  color= "black" ,
+           size=3, label = "Seuil d'admissibilité")  &
+  theme(plot.caption = element_text(size = 6, family="serif"), 
+        plot.title = element_text(size = 10, family="serif"),
+        plot.subtitle = element_text(size= 8, family="serif"),
+        legend.title = element_text(size = 8, family="serif"),
+        legend.text = element_text(size = 8, family="serif"),
+        axis.title.x = element_text(size = 8, family="serif"),
+        axis.text.x = element_text(size = 7, family="serif"),
+        axis.title.y = element_text(size = 8, family="serif"),
+        axis.text.y = element_text(size = 7, family="serif"))
+
+```
+
+Source: EGALE, cohortes 2016-2020
+
+Pendant longtemps, le concours de l'ENA, sans avoir été réservé aux hommes, a été une voie quasi exclusivement masculine d'accès aux plus hautes positions de la fonction publique. Ce n'est qu'à partir des années 1980 que des femmes investissent réellement l'ENA. Les parents de classes sociales supérieures ont encouragé leurs filles à poursuivre des études supérieures prestigieuses, dont l'ENA [@favier2021]. Ces jeunes femmes ont été ainsi soutenues dans ce choix d'orientation par leur environnement familial. Elles ne choisissent pas aussi souvent cette voie que les hommes (comme l'indique le graphique 1), mais lorsqu'elles s'y engagent, elles réussissent aussi bien, sinon mieux qu'eux (graphique 3). La tendance à promouvoir une diversification de la haute fonction publique en encourageant les personnes issues de milieux populaires a encouragé les hommes d'origine sociale modeste à se présenter au concours de l'ENA et, même s'ils y accèdent moins que les personnes d'origine sociale supérieure, une telle ambition leur apparaît légitime. En revanche, les femmes issues de milieux populaires n'ont pas bénéficié de ces dynamiques sociales d'égalisation des chances. Ainsi, renoncent-elles davantage que les autres à candidater (graphique 1) et, lorsqu'elles se lancent, elles s'y préparent moins spécifiquement (graphique 2), et elles se présentent aux épreuves avec, semble-t-il, moins de conviction ou de confiance en leur capacité. Leur sous-représentation dans les lieux de pouvoir altère leur sentiment de légitimité, et elles ne bénéficent pas d'un environnement social leur permettant de surmonter ce handicap.
+
+### Comment corriger ces inégalités des chances? {.unnumbered}
+
+Qu'il s'agisse du sexe ou de l'origine sociale, ces inégalités résultent d'une succession de processus de sélection depuis la petite enfance jusqu'aux dernières marches permettant l'accès à ces postes de pouvoir. L'entrée à l'ENA n'est que le dernier maillon scolaire de cette longue chaîne d'inégalités, mais elle constitue un moment clé dans le recrutement des hauts fonctionnaires. La diversification des profils des énarques est donc un axe incontournable d'une politique de diversification des élites administratives, politiques et économiques [@larat2015].
+
+Comment corriger ce processus défavorable aux femmes de classes sociales modestes ? Du côté de l'INSP, qui succède à l'ENA, plusieurs mesures peuvent être prises. D'une part, il conviendrait de revenir sur la suppression de la limite du nombre de candidatures possibles. En effet, notre étude montre que ce sont surtout les hommes d'origine sociale élevée qui candidatent plusieurs fois. Or, sans surprise, le nombre de candidatures accroît significativement les chances d'être admissible. Aussi la suppression de la limite de candidature instauré en 2021, loin de diversifier la haute fonction publique, aura probablement l'effet inverse.
+
+D'autre part, les classes talents ouvertes par l'INSP en 2021, visant à accompagner des candidats issus de milieux populaires, constituent un outil intéressant pour diversifier les profils des lauréats, à condition toutefois d'attirer plus spécifiquement les femmes. Il s'agit de les accompagner et de les encourager à s'inscrire au concours de l'INSP et de contribuer à réduire le sentiment d'illégitimité qu'elles doivent surmonter au moment des épreuves.
+
+Enfin du côté de Sciences Po, l'enjeu consiste à mieux comprendre les choix d'orientation en amont de la PCA. Il s'agit également de soutenir les étudiantes issues de milieux populaires afin de les accompagner plus spécifiquement tout au long du processus de sélection.
+
+## Références bibliographiques {.unnumbered}
