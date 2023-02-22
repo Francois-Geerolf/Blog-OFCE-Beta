@@ -1,4 +1,7 @@
 
+
+
+
 # Version du blog OFCE sous Quarto
 
 Le blog de l'OFCE va prochainement évoluer pour pouvoir intégrer de nouveaux types de contenus (comme des graphes interactifs), mais également s'inscrire dans un processus de publication simplifié.
@@ -6,6 +9,50 @@ Il s'appuie sur l'éditeur de contenus scientifiques multi-langages [Quarto](htt
 Ses principes de fonctionnement découlent de ceux de [Markdown](https://www.markdownguide.org/), et permettent notamment de concilier plusieurs types de contenus (texte, images, code, liens) au sein d'un même script qui lui-même peut intégrer  différents langages.
 
 Le fonctionnement du blog repose sur la compilation de plusieurs de ces scripts qui s'articulent autour d'une page d'accueil et des différents posts qui l'alimente comme le montre la structure du dossier repository du blog (voir la structure de fichiers du repository). 
+ 
+ ---
+        title: "Actualisation du processus de production et publication d’un post de blog"
+        date: "Juin 2022"
+        lang: fr
+---
+
+# Actualisation du processus de production et publication d’un post de blog
+
+Le Blog a vocation à être un support de publication rapide et vivant, mettant en avant la grande variété des opinions et des travaux des chercheurs de l’OFCE. Un post de blog est un billet aux vertus pédagogiques et s’adresse à un large public. Ce n’est pas un papier de recherche. Le format est assez souple. Il vise à montrer la diversité des centres d’intérêt des chercheurs de l’OFCE mais peut aussi accueillir des propositions de chercheurs non OFCE. Le texte doit être court, accrocheur et porteur d’un message (deux maximum) clairement mis en avant. Il peut être une réaction à la publication d’une statistique, support de débat...
+Il peut aussi mettre en avant des travaux de recherche déjà publiés, augmentant ainsi leur visibilité numérique. C’est le cas notamment des Policy Briefs qui donnent lieu à la sortie d’un post au moment de leur publication.
+
+
+## Circuit de production et de publication
+
+Les auteurs envoient la proposition de billet V1 à la rédactrice en chef (RC) qui se charge de l’envoyer éventuellement à un relecteur. Retour aux auteur(e)s dans un délai rapide.
+
+ ### Retour d’une version V2 à la RC
+ La version finale est envoyée au CD pour information et à Xavier Ragot pour validation (de fait après 24 h en cas de non-réponse). Il est envoyé à l’équipe de publication pour relecture et mise en ligne (dans la journée).
+
+## Normes de publication
+
+Titre : Le titre doit être un peu accrocheur
+
+Texte : Le texte doit contenir entre 10 000 et 20 000 signes (l’idéal étant 15 000). Il peut donc être court. Ne pas hésiter à utiliser les hyperliens pour alléger les références à d’autres travaux.
+
+Mise en forme du texte : Style Normal. Prévoir un seul niveau d’intertitre
+
+Graphiques : insérer les appels de graphiques dans le texte et faire une numérotation automatique 1
+
+Mettre le titre à l’extérieur du graphique avec les légendes des axes. Najette adaptera la couleur des courbes selon des normes précises. Indiquer les sources et notes.
+Les graphiques doivent être envoyés dans un fichier Excel, ou mieux, quand ils ont été réalisés sous R, en format eps.
+A défaut, les graphiques peuvent être envoyés comme image sous svg ou pdf.
+Utiliser les codes ISO 3 lettres dans les graphiques avec pays, sauf pour le Royaume-Uni (RU ou UK).
+Dans les figures avec courbes, faire un quadrillage principal horizontal et un quadrillage principal vertical. Dans les figures avec barres, quadrillage horizontal seulement.
+Le titre des axes est mis en vertical pour les ordonnées, en horizontal pour les abscisses avec une Police 10. Les légendes sont également en Police 10.
+
+1 Aller dans Référence/légende/insérer une légende. Mettre le titre du graphique (tableau, ...). Sélectionner
+graphique (tableau, ...). OK. Puis sélectionner le titre du graphique (tableau, ...). Se positionner dans le texte à
+l’endroit du renvoi. Aller dans Référence/légende/renvoi. Catégorie : graphique / Insérer un renvoi à : Texte et
+numéro uniquement. Cocher la case Insérer comme un lien hypertexte. OK
+
+# Rédaction d'un texte à partir de Quarto
+
 
 # Post de blog sous Quarto 
 La rédaction d'un post de blog se fait désormais intégralement sous ce format Quarto (extension .qmd), auquel est associé l'ensemble des fichiers et commandes qui en permettent la compilation pour produire sa version publiable.
